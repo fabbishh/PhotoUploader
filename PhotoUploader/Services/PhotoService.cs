@@ -129,13 +129,13 @@ namespace PhotoUploader.Services
                 return;
             }
 
+            // Удаляем информацию о фото из базы данных
+            await _photoRepository.DeletePhotoAsync(id);
+
             // Удаляем файлы с сервера
             File.Delete(Path.Combine(_env.WebRootPath, photo.UrlOriginal));
             File.Delete(Path.Combine(_env.WebRootPath, photo.UrlSmall));
             File.Delete(Path.Combine(_env.WebRootPath, photo.UrlThumb));
-
-            // Удаляем информацию о фото из базы данных
-            await _photoRepository.DeletePhotoAsync(id);
         }
 
         public bool IsSupportedFileType(string fileName)

@@ -1,0 +1,95 @@
+﻿@{
+    ViewData["Title"] = "Главная страница";
+}
+
+<div class="container">
+    <button id="uploadButton" class="btn btn-primary">Загрузить файлы</button>
+</div>
+
+<div id="popupContainer" class="popup-container">
+    <div class="popup-content">
+        <div id="partialViewContainer">
+        </div>
+        <button id="closeBtn" class="btn btn-danger">Закрыть</button>
+    </div>
+</div>
+
+
+<style>
+    .popup-container {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 10;
+    }
+
+    .popup-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        text-align: center;
+        width: 50%;
+    }
+
+    .closeBtn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 20px;
+        color: #aaa;
+        cursor: pointer;
+    }
+
+    .container {
+        text-align: center;
+        margin-top: 50px;
+    }
+
+</style>
+
+@section scripts {
+    <script>
+        document.getElementById("uploadButton").addEventListener("click", function () {
+            loadPartialView();
+        });
+
+        function loadPartialView() {
+            $.ajax({
+                url: "@Url.Action("UploadPopup", "Photo")",
+                type: "GET",
+                processData: false,
+                contentType: false,
+                beforeSend: function () {
+                    $("#uploadButton").prop("disabled", true);
+                },
+                success: function (data) {
+                    $("#partialViewContainer").html(data);
+                    document.getElementById("popupContainer").style.display = "block";
+                },
+                complete: function () {
+                    // Разблокируем элементы управления после завершения запроса
+                    $("#uploadButton").prop("disabled", false);
+                }
+            });
+        }
+
+        document.getElementById("closeBtn").addEventListener("click", function () {
+            document.getElementById("popupContainer").style.display = "none";
+        });
+
+        document.addEventListener("click", function (event) {
+            var popupContainer = document.getElementById("popupContainer");
+            if (event.target === popupContainer || event.target.classList.contains("close")) {
+                popupContainer.style.display = "none";
+            }
+        });
+    </script>
+}

@@ -1,0 +1,135 @@
+﻿@using PhotoUploader.Entities
+@model List<Photo>
+
+<ul id="photoList">
+    @foreach (var photo in Model)
+    {
+        <li>
+            <div class="photo-container">
+                <img src="@photo.UrlSmall" alt="@photo.FileName">
+                <a href="" class="delete-link" data-photo-id="@photo.Id">&times;</a>
+
+                @if (photo.IsMain)
+                {
+                    <span class="main-indicator">&#9733;</span>
+                }
+            </div>
+            <div class="actions">
+                @if (photo.IsMain)
+                {
+                    <span>Главное фото</span>
+                }
+                else
+                {
+                    <a href="" class="set-main-link" data-photo-id="@photo.Id">Сделать главным</a>
+                }
+            </div>
+
+        </li>
+    }
+</ul>
+
+@if (ViewBag.InvalidSizeFiles != null && ViewBag.InvalidSizeFiles.Count > 0)
+{
+    <script>
+        showNotification('error', 'Файлы не соответствуют ограничениям по размеру: @string.Join(", ", ViewBag.InvalidSizeFiles)');
+    </script>
+}
+
+@if (ViewBag.InvalidCountFiles != null && ViewBag.InvalidCountFiles.Count > 0)
+{
+    <script>
+        showNotification('error', 'Достигнут лимит загрузки файлов. Следующие файлы не были загружены: @string.Join(", ", ViewBag.InvalidCountFiles)');
+    </script>
+}
+
+@if (ViewBag.InvalidTypeFiles != null && ViewBag.InvalidTypeFiles.Count > 0)
+{
+    <script>
+        showNotification('error', 'Неподдерживаемый формат следующих файлов: @string.Join(", ", ViewBag.InvalidTypeFiles)');
+    </script>
+}
+
+@if (ViewBag.Success != null) 
+{
+    <script>
+        showNotification('success', 'Файлы успешно загружены');
+    </script>
+}
+
+
+<style>
+    #photoList {
+        list-style-type: none;
+        display: flex;
+        flex-wrap: wrap; 
+    }
+
+    li {
+        margin-right: 10px;
+        margin-left: 10px;
+        margin-bottom: 15px;
+    }
+
+    .photo-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 140px;
+        height: 120px;
+    }
+
+    .delete-link {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        color: red;
+        font-weight: bold;
+        font-size: 18px;
+        text-decoration: none;
+    }
+
+    .actions {
+        text-align: center;
+        margin-top: 5px;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        // Обработчик события для сделать главным
+        $('#photoList').on('click', '.set-main-link', function (e) {
+            e.preventDefault();
+            var photoId = $(this).data('photo-id');
+
+            $.ajax({
+                url: '@Url.Action("SetMain", "Photo")',
+                method: 'POST',
+                data: { id: photoId },
+                success: function (response) {
+                    $("#photoList").html(response);
+                }
+            });
+        });
+
+        // Обработчик события для удаления
+        $('#photoList').on('click', '.delete-link', function (e) {
+            e.preventDefault();
+            var photoId = $(this).data('photo-id');
+
+            $.ajax({
+                url: '@Url.Action("Delete", "Photo")',
+                method: 'DELETE',
+                data: { id: photoId },
+                success: function (response) {
+                    $("#photoList").html(response);
+                }
+            });
+        });
+
+        $('#closeErrorBtn').click(function () {
+            $('#errorMessage').hide();
+        });
+    });
+</script>

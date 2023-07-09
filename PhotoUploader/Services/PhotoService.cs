@@ -132,6 +132,18 @@ namespace PhotoUploader.Services
             // Удаляем информацию о фото из базы данных
             await _photoRepository.DeletePhotoAsync(id);
 
+            //Если удаляем главное фото, устанавливаем новое главное
+            if (photo.IsMain)
+            {
+                var photos = await _photoRepository.GetUserPhotosAsync(_userId);
+                if (photos.Count > 1)
+                {
+                    var newMainPhoto = photos.First();
+                    newMainPhoto.IsMain = true;
+                    await _photoRepository.SavePhotoAsync(newMainPhoto);
+                }
+            }
+
             // Удаляем файлы с сервера
             File.Delete(Path.Combine(_env.WebRootPath, photo.UrlOriginal));
             File.Delete(Path.Combine(_env.WebRootPath, photo.UrlSmall));

@@ -24,8 +24,14 @@ public class PhotoController : Controller
     }
 
     [HttpPost]
+    [RequestSizeLimit(long.MaxValue)]
     public async Task<IActionResult> Upload(List<IFormFile> files)
     {
+        if(files == null)
+        {
+            return PartialView("_PhotoListPartial", await _photoService.GetPhotosAsync());
+        }
+
         var invalidSizeFiles = new List<string>();
         var invalidTypeFiles = new List<string>();
         var invalidCountFiles = new List<string>();
@@ -36,6 +42,12 @@ public class PhotoController : Controller
 
         foreach (var file in files)
         {
+            //Проверка лимита на загрузку файлов
+            if (totalFileCount >= _maxFiles)
+            {
+                invalidCountFiles.Add(file.FileName);
+                continue;
+            }
             //Проверка размера файла
             if (file.Length < 2 * 1024 * 1024 || file.Length > 8 * 1024 * 1024)
             {
@@ -46,12 +58,6 @@ public class PhotoController : Controller
             if (!_photoService.IsSupportedFileType(file.FileName))
             {
                 invalidTypeFiles.Add(file.FileName);
-                continue;
-            }
-            //Проверка лимита на загрузку файлов
-            if (totalFileCount >= _maxFiles)
-            {
-                invalidCountFiles.Add(file.FileName);
                 continue;
             }
 
@@ -73,6 +79,8 @@ public class PhotoController : Controller
             ViewBag.InvalidSizeFiles = invalidSizeFiles;
             ViewBag.InvalidTypeFiles = invalidTypeFiles;
             ViewBag.InvalidCountFiles = invalidCountFiles;
+            ViewBag.FilesCount = files.Count;
+            ViewBag.UploadedFilesCount = validFiles.Count;
         }
 
         return PartialView("_PhotoListPartial", photos);

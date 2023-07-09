@@ -32,21 +32,21 @@
 @if (ViewBag.InvalidSizeFiles != null && ViewBag.InvalidSizeFiles.Count > 0)
 {
     <script>
-        showNotification('error', 'Файлы не соответствуют ограничениям по размеру: @string.Join(", ", ViewBag.InvalidSizeFiles)');
+        showNotification('error', 'Файлы не соответствуют ограничениям по размеру: @Html.Raw(System.Text.Encoding.UTF8.GetString(System.Text.Encoding.Default.GetBytes(string.Join(", ", ViewBag.InvalidSizeFiles))))');
     </script>
 }
 
 @if (ViewBag.InvalidCountFiles != null && ViewBag.InvalidCountFiles.Count > 0)
 {
     <script>
-        showNotification('error', 'Достигнут лимит загрузки файлов. Следующие файлы не были загружены: @string.Join(", ", ViewBag.InvalidCountFiles)');
+        showNotification('error', 'Достигнут лимит загрузки файлов. Загружено @ViewBag.UploadedFilesCount из @ViewBag.FilesCount. Следующие файлы не были загружены: @Html.Raw(System.Text.Encoding.UTF8.GetString(System.Text.Encoding.Default.GetBytes(string.Join(", ", ViewBag.InvalidCountFiles))))');
     </script>
 }
 
 @if (ViewBag.InvalidTypeFiles != null && ViewBag.InvalidTypeFiles.Count > 0)
 {
     <script>
-        showNotification('error', 'Неподдерживаемый формат следующих файлов: @string.Join(", ", ViewBag.InvalidTypeFiles)');
+        showNotification('error', 'Неподдерживаемый формат следующих файлов: @Html.Raw(System.Text.Encoding.UTF8.GetString(System.Text.Encoding.Default.GetBytes(string.Join(", ", ViewBag.InvalidTypeFiles))))');
     </script>
 }
 
@@ -99,7 +99,7 @@
 <script>
     $(document).ready(function () {
         // Обработчик события для сделать главным
-        $('#photoList').on('click', '.set-main-link', function (e) {
+        $('#photoList').off('click', '.set-main-link').on('click', '.set-main-link', function (e) {
             e.preventDefault();
             var photoId = $(this).data('photo-id');
 
@@ -114,7 +114,7 @@
         });
 
         // Обработчик события для удаления
-        $('#photoList').on('click', '.delete-link', function (e) {
+        $('#photoList').off('click', '.delete-link').on('click', '.delete-link', function (e) {
             e.preventDefault();
             var photoId = $(this).data('photo-id');
 
@@ -132,4 +132,5 @@
             $('#errorMessage').hide();
         });
     });
+
 </script>

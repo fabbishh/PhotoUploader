@@ -1,110 +1,52 @@
 ﻿@using PhotoUploader.Entities
 @model List<Photo>
 
-<h2>Выбранные фото</h2>
+
+<h2>Загрузка фото</h2>
 <div class="d-flex justify-content-center align-items-center">
     <div class="file-input-container me-2">
         <input type="file" id="fileInput" accept=".jpg, .jpeg, .png" multiple>
         <label for="fileInput" class="custom-file-label"></label>
     </div>
-    <button id="uploadBtn" class="btn btn-primary">Загрузить</button>
 </div>
-<div id="previewContainer"></div>
 
-
-<h2>Загруженные фото</h2>
 <div id="photoList">
     @await Html.PartialAsync("_PhotoListPartial", Model)
 </div>
-
-
-<style>
-    #previewContainer {
-        display: flex;
-        flex-wrap: wrap;
-        margin-top: 10px;
-        padding-left: 50px;
-        padding-right: 50px;
-    }
-
-    .file-preview {
-        margin-right: 10px;
-        margin-left: 10px;
-        margin-bottom: 15px;
-    }
-
-    .file-preview img {
-        height: 100px;
-        width: 100px;
-        object-fit: cover; 
-    }
-</style>
 
 <script>
     $(document).ready(function () {
         // Обработчик события выбора файлов
         $('#fileInput').on('change', async function (e) {
             var files = e.target.files;
-            $('#previewContainer').empty();
 
-            for (let i = 0; i < files.length; i++) {
-                var file = files[i];
-                var filePreview = await readFileAsync(file);
-                $('#previewContainer').append(filePreview);
+            // Отправка файлов на сервер
+            var formData = new FormData();
+            for (var i = 0; i < files.length; i++) {
+                formData.append("files", files[i]);
             }
-        });
 
-        function readFileAsync(file) {
-            return new Promise((resolve, reject) => {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    var filePreview = $('<div class="file-preview">' +
-                        '<img height="100" width="100" src="' + e.target.result + '" alt="Preview" />' +
-                        '</div>');
-                    resolve(filePreview);
-                };
-                reader.onerror = function (e) {
-                    reject(e);
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-
-        // Обработчик клика на кнопку "Загрузить"
-        $("#uploadBtn").click(function () {
-            var files = $("#fileInput").prop("files");
-            if (files.length > 0) {
-                var formData = new FormData();
-                for (var i = 0; i < files.length; i++) {
-                    formData.append("files", files[i]);
+            $.ajax({
+                url: "@Url.Action("Upload", "Photo")",
+                type: "POST",
+                processData: false,
+                contentType: false,
+                data: formData,
+                beforeSend: function () {
+                    // Блокируем элементы управления перед отправкой запроса
+                    $("#fileInput").prop("disabled", true);
+                    $("#closeBtn").prop("disabled", true);
+                },
+                success: function (data) {
+                    $("#photoList").html(data);
+                },
+                complete: function () {
+                    // Разблокируем элементы управления после завершения запроса
+                    $("#closeBtn").prop("disabled", false);
+                    $("#fileInput").prop("disabled", false);
+                    $('#fileInput').val('');
                 }
-
-                $.ajax({
-                    url: "@Url.Action("Upload", "Photo")",
-                    type: "POST",
-                    processData: false,
-                    contentType: false,
-                    data: formData,
-                    beforeSend: function () {
-                        // Блокируем элементы управления перед отправкой запроса
-                        $("#fileInput").prop("disabled", true);
-                        $("#uploadBtn").prop("disabled", true);
-                        $("#closeBtn").prop("disabled", true);
-                    },
-                    success: function (data) {
-                        $("#photoList").html(data);
-                    },
-                    complete: function () {
-                        // Разблокируем элементы управления после завершения запроса
-                        $("#uploadBtn").prop("disabled", false);
-                        $("#closeBtn").prop("disabled", false);
-                        $("#fileInput").prop("disabled", false);
-                        $('#fileInput').val(''); 
-                        $('#previewContainer').empty();
-                    }
-                });
-            }
+            });
         });
     });
 </script>

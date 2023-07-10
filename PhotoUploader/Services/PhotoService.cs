@@ -136,7 +136,7 @@ namespace PhotoUploader.Services
             if (photo.IsMain)
             {
                 var photos = await _photoRepository.GetUserPhotosAsync(_userId);
-                if (photos.Count > 1)
+                if (photos.Count > 0)
                 {
                     var newMainPhoto = photos.First();
                     newMainPhoto.IsMain = true;

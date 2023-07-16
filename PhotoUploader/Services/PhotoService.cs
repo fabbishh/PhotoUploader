@@ -1,5 +1,6 @@
 ﻿using PhotoUploader.Entities;
 using PhotoUploader.Helpers;
+using PhotoUploader.Models;
 using PhotoUploader.Repository;
 using System.Security.Claims;
 
@@ -25,11 +26,52 @@ namespace PhotoUploader.Services
             return await _photoRepository.GetUserPhotosAsync(_userId);
         }
 
-        public async Task UploadPhotoAsync(List<IFormFile> files)
+        public async Task<FilesResponseModel> UploadPhotoAsync(UploadPhotosModel model, int maxFiles)
         {
-            var hasPhoto = (await _photoRepository.GetUserPhotosAsync(_userId)).Any();
-            foreach(var file in files)
+            var existingPhotos = await _photoRepository.GetUserPhotosAsync(_userId);
+            var hasPhoto = existingPhotos.Any();
+            var response = new FilesResponseModel();
+
+            var totalFileCount = existingPhotos.Count;
+
+            foreach (var file in model.Files)
             {
+                //Проверка лимита на загрузку файлов
+                if (totalFileCount >= maxFiles)
+                {
+                    response.InvalidCountFiles.Add(file.FileName);
+                    continue;
+                }
+                //Проверка размера файла
+                if (file.Length < 2 * 1024 * 1024 || file.Length > 8 * 1024 * 1024)
+                {
+                    response.InvalidSizeFiles.Add(file.FileName);
+                    continue;
+                }
+                //Проверка типа файла
+                if (!IsSupportedFileType(file.FileName))
+                {
+                    response.InvalidTypeFiles.Add(file.FileName);
+                    continue;
+                }
+
+                byte[] photoBytes;
+                using (var memoryStream = new MemoryStream())
+                {
+                    await file.CopyToAsync(memoryStream);
+                    photoBytes = memoryStream.ToArray();
+                }
+
+                string photoHash = EncryptionHelper.ComputePhotoHash(photoBytes);
+
+                //Проверка на дубликат
+                bool photoExists = await _photoRepository.CheckPhotoExistsAsync(photoHash, _userId);
+                if (photoExists)
+                {
+                    response.DuplicateFiles.Add(file.FileName);
+                    continue;
+                }
+
                 // Генерируем уникальное имя файла
                 var photoGuid = Guid.NewGuid();
 
@@ -46,18 +88,24 @@ namespace PhotoUploader.Services
                     UrlSmall = smallUrl,
                     UrlThumb = thumbUrl,
                     IsMain = !hasPhoto,
+                    Hash = photoHash,
+                    TagId = model.TagId,
                     UserId = _userId,
                     DateCreated = DateTimeOffset.UtcNow
                 };
 
                 // Сохраняем информацию о фото в базе данных
                 await _photoRepository.SavePhotoAsync(photo);
+                response.ValidFiles.Add(file.FileName);
+                totalFileCount++;
 
                 if (!hasPhoto)
                 {
                     hasPhoto = true;
                 }
             }
+
+            return response;
         }
 
         private string SavePhotoToStorage(Guid fileId, string type, IFormFile file)
@@ -96,7 +144,7 @@ namespace PhotoUploader.Services
                 throw new InvalidDataException("format type is not supported");
             }
 
-            string filePathForDb = Path.Combine($"Files\\User{_userId}\\", type, fileName);
+            string filePathForDb = Path.Combine($"\\Files\\User{_userId}\\", type, fileName);
 
             return filePathForDb;
         }
@@ -145,12 +193,12 @@ namespace PhotoUploader.Services
             }
 
             // Удаляем файлы с сервера
-            File.Delete(Path.Combine(_env.WebRootPath, photo.UrlOriginal));
-            File.Delete(Path.Combine(_env.WebRootPath, photo.UrlSmall));
-            File.Delete(Path.Combine(_env.WebRootPath, photo.UrlThumb));
+            File.Delete(Path.Combine(_env.WebRootPath, photo.UrlOriginal.Remove(0, 1)));
+            File.Delete(Path.Combine(_env.WebRootPath, photo.UrlSmall.Remove(0, 1)));
+            File.Delete(Path.Combine(_env.WebRootPath, photo.UrlThumb.Remove(0, 1)));
         }
 
-        public bool IsSupportedFileType(string fileName)
+        private bool IsSupportedFileType(string fileName)
         {
             var allowedExtensions = new[] { ".jpeg", ".jpg", ".png" };
             var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
@@ -161,7 +209,7 @@ namespace PhotoUploader.Services
         {
             using (Image image = Image.Load(file.OpenReadStream()))
             {
-                // Изменяем размер и сохраняем изображение размером 100x100
+                // Изменяем размер и сохраняем изображение с новым размером
                 using (Image resizedImage = image.Clone(x => x.Resize(new ResizeOptions
                 {
                     Size = new Size(width, height),

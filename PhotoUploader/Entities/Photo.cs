@@ -8,6 +8,9 @@
         public string UrlSmall { get; set; }
         public string UrlThumb { get; set; }
         public bool IsMain { get; set; }
+        public string Hash { get; set; }
+        public Guid? TagId { get; set; }
+        public Tag? Tag { get; set; }
         public Guid UserId { get; set; }
         public DateTimeOffset DateCreated { get; set; }
     }

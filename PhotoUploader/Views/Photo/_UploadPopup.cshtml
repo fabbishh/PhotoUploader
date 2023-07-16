@@ -4,27 +4,37 @@
 
 <h2>Загрузка фото</h2>
 <div class="d-flex justify-content-center align-items-center">
-    <div class="file-input-container me-2">
+    <div class="me-2">
+        <select class="tagSelect"></select>
+    </div>
+    <div class="file-input-container">
         <input type="file" id="fileInput" accept=".jpg, .jpeg, .png" multiple>
         <label for="fileInput" class="custom-file-label"></label>
     </div>
 </div>
 
+
 <div id="photoList">
     @await Html.PartialAsync("_PhotoListPartial", Model)
 </div>
-
+<style>
+    .tagSelect {
+        width: 150px;
+    }
+</style>
 <script>
     $(document).ready(function () {
         // Обработчик события выбора файлов
         $('#fileInput').on('change', async function (e) {
             var files = e.target.files;
+            var tag = $('.tagSelect').select2('data')[0];
 
             // Отправка файлов на сервер
             var formData = new FormData();
             for (var i = 0; i < files.length; i++) {
                 formData.append("files", files[i]);
             }
+            formData.append("tagId", tag?.id);
 
             $.ajax({
                 url: "@Url.Action("Upload", "Photo")",
@@ -36,6 +46,7 @@
                     // Блокируем элементы управления перед отправкой запроса
                     $("#fileInput").prop("disabled", true);
                     $("#closeBtn").prop("disabled", true);
+                    $(".tagSelect").prop("disabled", true);
                 },
                 success: function (data) {
                     $("#photoList").html(data);
@@ -45,8 +56,48 @@
                     $("#closeBtn").prop("disabled", false);
                     $("#fileInput").prop("disabled", false);
                     $('#fileInput').val('');
+                    $(".tagSelect").val(null).trigger("change");
+                    $(".tagSelect").prop("disabled", false);
                 }
             });
+        });
+
+        $(".tagSelect").select2({
+            minimumInputLength: 1,
+            language: {
+                inputTooShort: function () {
+                    return "Введите один или более символов";
+                },
+                noResults: function () {
+                    return "Ничего не найдено";
+                }
+            },
+            ajax: {
+                url: '@Url.Action("GetAllTags", "Tag")',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        searchTerm: params.term
+                    };
+                },
+                processResults: function (data) {
+
+                    return {
+                        results: $.map(data, function (item) {
+                            return {
+                                id: item.id,
+                                text: item.name,
+                            };
+                        })
+                    };
+                },
+                cache: true
+            },
+            placeholder: 'Выберите тэг',
+            allowClear: true
+        }).on('select2:open', () => {
+            document.querySelector('.select2-search__field').focus();
         });
     });
 </script>

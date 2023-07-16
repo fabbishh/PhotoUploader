@@ -14,7 +14,12 @@ namespace PhotoUploader.Repository
 
         public async Task<List<Photo>> GetUserPhotosAsync(Guid userId)
         {
-            return await _dbContext.Photos.Where(p => p.UserId == userId).OrderBy(p => p.DateCreated).ToListAsync();
+            return await _dbContext.Photos
+                .Include(p => p.Tag)
+                .Where(p => p.UserId == userId)
+                .OrderByDescending(p => p.IsMain)
+                .ThenBy(p => p.DateCreated)
+                .ToListAsync();
         }
         
         public async Task<Photo> GetPhotoByIdAsync(Guid id)
@@ -55,6 +60,13 @@ namespace PhotoUploader.Repository
                 _dbContext.Photos.Update(mainPhoto);
                 await _dbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task<bool> CheckPhotoExistsAsync(string hash, Guid userId)
+        {
+            return await _dbContext.Photos
+                .Where(p => p.UserId == userId && p.Hash == hash)
+                .AnyAsync();
         }
     }
 }

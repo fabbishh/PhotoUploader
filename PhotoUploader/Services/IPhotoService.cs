@@ -1,13 +1,13 @@
 ﻿using PhotoUploader.Entities;
+using PhotoUploader.Models;
 
 namespace PhotoUploader.Services
 {
     public interface IPhotoService
     {
         Task<List<Photo>> GetPhotosAsync();
-        Task UploadPhotoAsync(List<IFormFile> files);
+        Task<FilesResponseModel> UploadPhotoAsync(UploadPhotosModel model, int maxFiles);
         Task SetMainPhotoAsync(Guid id);
         Task DeletePhotoAsync(Guid id);
-        bool IsSupportedFileType(string fileName);
     }
 }

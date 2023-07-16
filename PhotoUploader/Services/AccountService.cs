@@ -30,7 +30,7 @@ namespace PhotoUploader.Services
                 user = new User()
                 {
                     Name = model.Name,
-                    Password = EncryptionHelper.HashPassowrd(model.Password),
+                    Password = EncryptionHelper.HashPassword(model.Password),
                 };
 
                 await _userRepository.Create(user);
@@ -56,7 +56,7 @@ namespace PhotoUploader.Services
                     return null;
                 }
 
-                if (user.Password != EncryptionHelper.HashPassowrd(model.Password))
+                if (user.Password != EncryptionHelper.HashPassword(model.Password))
                 {
                     return null;
                 }

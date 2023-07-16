@@ -25,9 +25,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 
 var app = builder.Build();

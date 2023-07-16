@@ -35,8 +35,15 @@ namespace PhotoUploader.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsMain")
                         .HasColumnType("bit");
+
+                    b.Property<Guid?>("TagId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UrlOriginal")
                         .IsRequired()
@@ -58,6 +65,21 @@ namespace PhotoUploader.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Photos", (string)null);
+                });
+
+            modelBuilder.Entity("PhotoUploader.Entities.Tag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tags", (string)null);
                 });
 
             modelBuilder.Entity("PhotoUploader.Entities.User", b =>

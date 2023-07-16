@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\lib\fancyapps\**" />
+    <Content Remove="wwwroot\lib\fancyapps\**" />
+    <EmbeddedResource Remove="wwwroot\lib\fancyapps\**" />
+    <None Remove="wwwroot\lib\fancyapps\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.8">

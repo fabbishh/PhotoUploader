@@ -9,5 +9,6 @@ namespace PhotoUploader.Repository
         Task SavePhotoAsync(Photo photo);
         Task DeletePhotoAsync(Guid id);
         Task ClearMainPhotoAsync(Guid userId);
+        Task<bool> CheckPhotoExistsAsync(string hash, Guid userId);
     }
 }

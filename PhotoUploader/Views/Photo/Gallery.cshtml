@@ -1,0 +1,111 @@
+﻿@model GalleryViewModel
+
+<div id="gallery-preview" class="gallery">
+    @foreach (var photo in Model.Photos.Take(5))
+    {
+        <a href="javascript:;" data-fancybox onclick="openPopup(event)">
+            <img src="@photo.UrlThumb" alt="@photo.FileName" />
+        </a>
+    }
+</div>
+@if (Model.Photos != null && Model.Photos.Count > 0) {
+    <a href="javascript:;" onclick="openPopup(event)">Показать все фото</a>
+} else {
+    <h3>Здесь ничего нет</h3>
+    <a asp-controller="Photo" asp-action="Index">Загрузите фото</a>
+}
+
+sdsdsd
+<div id="popup" class="popup">
+    <span class="close" onclick="closePopup()">&times;</span>
+    <div class="popup-content">
+        <div id="gallery-main" class="gallery">
+            @foreach (var tag in Model.Tags)
+            {
+                <h3>@tag</h3>
+                @foreach (var photo in Model.Photos.Where(p => p.TagName == tag))
+                {
+                    <a href="@photo.UrlOriginal" data-caption="#@tag @photo.FileName">
+                        <img src="@photo.UrlThumb" alt="@photo.FileName" />
+                    </a>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+
+@section scripts {
+    <script>
+        Fancybox.bind("#gallery-main a", {
+            groupAll: true,
+        });
+        function openPopup(event) {
+            event.preventDefault();
+            document.getElementById('popup').style.display = 'block';
+            document.querySelector('.popup-content').scrollTop = 0;
+            
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+    </script>
+}
+
+<style>
+    .popup {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        overflow: auto;
+    }
+
+    .popup-content {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        height: 80%;
+        background-color: #fff;
+        padding: 20px;
+        overflow: auto;
+    }
+
+    .close {
+        position: absolute;
+        top: 10%;
+        right: 10.5%;
+        font-size: 24px;
+        color: black;
+        cursor: pointer;
+        z-index: 11;
+    }
+
+    .popup-content::-webkit-scrollbar {
+        display: none;
+    }
+
+    .popup-content {
+        scrollbar-width: thin;
+        scrollbar-color: #000000 transparent;
+    }
+
+    .popup-content::-webkit-scrollbar-thumb {
+        background-color: #000000;
+    }
+
+    .popup-content::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+
+    .gallery a img {
+        margin-bottom: 4px;
+    }
+</style>
